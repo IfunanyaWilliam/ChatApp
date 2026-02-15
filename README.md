@@ -182,7 +182,7 @@ dotnet run
    - Deploy to Azure
 
 8. **Access your app**
-   - Visit `https://your-app-name.azurewebsites.net`
+   - Visit `william-onah-chat-app-hwf2eadxb8feckdv.spaincentral-01.azurewebsites.net`
 
 ### Important Azure Configuration
 
