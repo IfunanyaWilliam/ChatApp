@@ -111,7 +111,7 @@ Get user by ID
 
 1. Clone the repository
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/IfunanyaWilliam/ChatApp.git
 cd ChatApp
 ```
 
@@ -131,113 +131,7 @@ dotnet run
 
 6. Start chatting!
 
-## Deploying to Azure
 
-### Setup Azure Resources
-
-1. **Create an Azure Web App**
-   - Go to [Azure Portal](https://portal.azure.com)
-   - Create a new Web App
-   - Choose .NET 8 runtime
-   - Note your app name (e.g., `my-chat-app`)
-
-2. **Get Publish Profile**
-   - In Azure Portal, go to your Web App
-   - Click "Get publish profile" in the Overview section
-   - Download the `.PublishSettings` file
-
-3. **Configure GitHub Secrets**
-   - Go to your GitHub repository
-   - Navigate to Settings → Secrets and variables → Actions
-   - Click "New repository secret"
-   - Name: `AZURE_WEBAPP_PUBLISH_PROFILE`
-   - Value: Paste the entire content of the `.PublishSettings` file
-   - Click "Add secret"
-
-4. **Update Workflow File**
-   - Edit `.github/workflows/azure-deploy.yml`
-   - Change `AZURE_WEBAPP_NAME` to your Azure Web App name
-   ```yaml
-   env:
-     AZURE_WEBAPP_NAME: my-chat-app  # Your Azure Web App name
-   ```
-
-5. **Enable WebSockets in Azure**
-   - In Azure Portal, go to your Web App
-   - Navigate to Configuration → General settings
-   - Set "Web sockets" to **On**
-   - Click Save
-
-6. **Push to GitHub**
-   ```bash
-   git add .
-   git commit -m "Initial commit"
-   git push origin main
-   ```
-
-7. **GitHub Actions will automatically:**
-   - Build the application
-   - Run tests
-   - Publish the app
-   - Deploy to Azure
-
-8. **Access your app**
-   - Visit `https://your-app-name.azurewebsites.net`
-
-### Important Azure Configuration
-
-For SignalR to work properly on Azure, ensure:
-
-1. **WebSockets are enabled** (Configuration → General settings)
-2. **Always On is enabled** (Configuration → General settings)
-3. **ARR Affinity is ON** (Configuration → General settings)
-
-## Testing the Application
-
-### Test User Registration
-```bash
-curl -X POST https://localhost:5001/api/user/register \
-  -H "Content-Type: application/json" \
-  -d '{"email":"test@example.com","firstName":"Test","lastName":"User"}'
-```
-
-### Test Get Online Users
-```bash
-curl https://localhost:5001/api/user/online
-```
-
-## Technology Stack
-
-- **Backend**: ASP.NET Core 8.0 MVC
-- **Real-time Communication**: SignalR
-- **Frontend**: Bootstrap 5, Vanilla JavaScript
-- **Storage**: In-Memory (ConcurrentDictionary)
-- **Deployment**: GitHub Actions → Azure Web App
-
-## Architecture Notes
-
-- **In-Memory Storage**: Users are stored in-memory using `ConcurrentDictionary` for thread-safety
-- **SignalR**: Provides real-time bidirectional communication between server and clients
-- **Connection Management**: Users are marked online when they connect to SignalR hub and offline when they disconnect
-- **Message Delivery**: Messages are sent directly to connected users using their SignalR connection ID
-
-## Limitations
-
-- Data is stored in-memory and will be lost on app restart
-- No message persistence
-- No authentication/authorization
-- Single server deployment (no scale-out without additional configuration)
-
-## Future Enhancements
-
-- Add database persistence (SQL Server, PostgreSQL)
-- Implement authentication (ASP.NET Core Identity)
-- Add message history storage
-- Support group chats
-- Add file sharing
-- Implement typing indicators
-- Add read receipts
-- Configure Redis backplane for multi-server SignalR
 
 ## License
 

@@ -3,11 +3,11 @@ name: Build and Deploy to Azure Web App
 on:
   push:
     branches:
-      - main
+      - production    
   workflow_dispatch:
 
 env:
-  AZURE_WEBAPP_NAME: your-app-name    # Set this to your Azure Web App name
+  AZURE_WEBAPP_NAME: william-onah-chat-app    # Set this to your Azure Web App name
   AZURE_WEBAPP_PACKAGE_PATH: '.'      # Set this to the path to your web app project
   DOTNET_VERSION: '8.0.x'             # Set this to the .NET Core version to use
 
