@@ -1,0 +1,60 @@
+html {
+    font-size: 14px;
+}
+
+@media (min-width: 768px) {
+    html {
+        font-size: 16px;
+    }
+}
+
+html {
+    position: relative;
+    min-height: 100%;
+}
+
+body {
+    margin-bottom: 60px;
+}
+
+.footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    white-space: nowrap;
+    line-height: 60px;
+}
+
+#chatMessages {
+    background-color: #f8f9fa;
+}
+
+.list-group-item-action:hover {
+    background-color: #e9ecef;
+}
+
+.list-group-item.active {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+#loggedInUser {
+    padding: 0 15px;
+    color: #ffffff !important;
+    font-size: 0.95rem;
+}
+
+#loggedInUser strong {
+    color: #ffc107;
+}
+
+.message-received {
+    background-color: #E3F2FD;
+    color: #1976D2;
+    border: 1px solid #BBDEFB;
+}
+
+.message-sent {
+    background-color: #1976D2;
+    color: white;
+}

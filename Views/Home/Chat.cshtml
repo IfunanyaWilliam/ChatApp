@@ -1,0 +1,217 @@
+@{
+    ViewData["Title"] = "Chat - Real-time Messaging";
+}
+
+<div class="container-fluid mt-3">
+    <div class="row">
+        <!-- Online Users Sidebar -->
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5>Online Users</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div id="onlineUsers" class="list-group list-group-flush">
+                        <!-- Users will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Chat Area -->
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 id="chatHeader">Select a user to start chatting</h5>
+                </div>
+                <div class="card-body" style="height: 500px; overflow-y: auto;" id="chatMessages">
+                    <!-- Messages will appear here -->
+                </div>
+                <div class="card-footer">
+                    <form id="messageForm" class="d-flex">
+                        <input type="text" class="form-control me-2" id="messageInput" 
+                               placeholder="Type a message..." disabled>
+                        <button type="submit" class="btn btn-primary" id="sendBtn" disabled>Send</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+    <script>
+        const userId = localStorage.getItem('userId');
+        const userName = localStorage.getItem('userName');
+
+        if (!userId) {
+            window.location.href = '/';
+        }
+
+        let selectedUserId = null;
+        let connection = null;
+        let chatHistory = {};
+
+        // Initialize SignalR connection
+        async function initializeChat() {
+            const hubUrl = '@ViewData["HubUrl"]';
+            connection = new signalR.HubConnectionBuilder()
+                .withUrl(hubUrl)
+                .withAutomaticReconnect()
+                .build();
+
+            connection.on("UpdateOnlineUsers", (users) => {
+                updateOnlineUsersList(users);
+            });
+
+            connection.on("ReceiveMessage", (fromUserId, fromUserName, message, timestamp) => {
+                if (!chatHistory[fromUserId]) {
+                    chatHistory[fromUserId] = [];
+                }
+                chatHistory[fromUserId].push({
+                    from: fromUserName,
+                    message: message,
+                    timestamp: timestamp,
+                    isReceived: true
+                });
+
+                if (selectedUserId === fromUserId) {
+                    displayMessages(fromUserId);
+                }
+
+                // Play notification sound or show badge
+                console.log(`New message from ${fromUserName}`);
+            });
+
+            connection.on("MessageSent", (toUserId, message, timestamp) => {
+                if (!chatHistory[toUserId]) {
+                    chatHistory[toUserId] = [];
+                }
+                chatHistory[toUserId].push({
+                    from: userName,
+                    message: message,
+                    timestamp: timestamp,
+                    isReceived: false
+                });
+
+                if (selectedUserId === toUserId) {
+                    displayMessages(toUserId);
+                }
+            });
+
+            try {
+                await connection.start();
+                console.log("SignalR Connected");
+                await connection.invoke("ConnectUser", userId);
+            } catch (err) {
+                console.error("SignalR Connection Error: ", err);
+                setTimeout(initializeChat, 5000);
+            }
+        }
+
+        function updateOnlineUsersList(users) {
+            
+            const onlineUsersDiv = document.getElementById('onlineUsers');
+
+            // Log each user's ID for debugging
+            users.forEach(u => {
+                console.log("User ID:", u.userId, "Type:", typeof u.userId);
+            });
+
+            // Simple string comparison
+            const filteredUsers = users.filter(u => {
+                console.log("Comparing:", u.userId, "!==", userId, "Result:", u.userId !== userId);
+                return u.userId !== userId;
+            });
+
+            console.log("Filtered users (after removing current user):", filteredUsers);
+            console.log("=== DEBUG END ===");
+
+            if (filteredUsers.length === 0) {
+                onlineUsersDiv.innerHTML = '<div class="p-3 text-muted">No other users online</div>';
+                return;
+            }
+
+            onlineUsersDiv.innerHTML = filteredUsers.map(user => `
+                <a href="#" class="list-group-item list-group-item-action ${selectedUserId === user.userId ? 'active' : ''}"
+                   data-userid="${user.userId}">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">${user.firstName} ${user.lastName}</h6>
+                        <small><span class="badge bg-success">Online</span></small>
+                    </div>
+                    <small class="text-muted">${user.email}</small>
+                </a>
+            `).join('');
+
+            // Add click handlers
+            document.querySelectorAll('#onlineUsers a').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    selectUser(link.dataset.userid, link.querySelector('h6').textContent);
+                });
+            });
+        }
+
+        function selectUser(targetUserId, targetUserName) {
+            selectedUserId = targetUserId;
+            document.getElementById('chatHeader').textContent = `Chat with ${targetUserName}`;
+            document.getElementById('messageInput').disabled = false;
+            document.getElementById('sendBtn').disabled = false;
+
+            // Update active state
+            document.querySelectorAll('#onlineUsers a').forEach(link => {
+                link.classList.toggle('active', link.dataset.userid === targetUserId);
+            });
+
+            displayMessages(targetUserId);
+        }
+
+        function displayMessages(targetUserId) {
+            const messagesDiv = document.getElementById('chatMessages');
+            const messages = chatHistory[targetUserId] || [];
+
+            if (messages.length === 0) {
+                messagesDiv.innerHTML = '<div class="text-center text-muted p-5">No messages yet. Start the conversation!</div>';
+                return;
+            }
+
+            messagesDiv.innerHTML = messages.map(msg => {
+                const time = new Date(msg.timestamp).toLocaleTimeString();
+                return `
+                    <div class="mb-3 ${msg.isReceived ? '' : 'text-end'}">
+                        <div class="d-inline-block">
+                            <small class="text-muted">${msg.from} - ${time}</small>
+                            <div class="p-2 rounded ${msg.isReceived ? 'message-received' : 'message-sent'}">
+                                ${msg.message}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        document.getElementById('messageForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value.trim();
+
+            if (message && selectedUserId && connection) {
+                try {
+                    await connection.invoke("SendMessage", selectedUserId, message);
+                    messageInput.value = '';
+                } catch (err) {
+                    console.error("Send Message Error: ", err);
+                }
+            }
+        });
+
+        // Initialize on page load
+        initializeChat();
+    </script>
+}
+
