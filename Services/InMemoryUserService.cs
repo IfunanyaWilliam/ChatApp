@@ -86,4 +86,44 @@ public class InMemoryUserService : IUserService
     {
         return _users.Values.FirstOrDefault(u => u.ConnectionId == connectionId);
     }
+
+    public string GetServerState()
+    {
+        var number = Random.Shared.Next(1, 5);
+
+        var serverStates = new List<ServerState>()
+        {
+            new ServerState
+            {
+                Id = Guid.NewGuid().ToString(),
+                Severity = "Normal",
+                Node = 1,
+                Description = "Server is running smoothly."
+            },
+            new ServerState
+            {
+                Id = Guid.NewGuid().ToString(),
+                Severity = "Off",
+                Node = 2,
+                Description = "Server is off."
+            },
+            new ServerState
+            {
+                Id = Guid.NewGuid().ToString(),
+                Severity = "Critical",
+                Node = 3,
+                Description = "Server is running in critical State. Attention is needed urgently."
+            },
+            new ServerState
+            {
+                Id = Guid.NewGuid().ToString(),
+                Severity = "Overloaded",
+                Node = 4,
+                Description = "Server shutdown due to unandled request."
+            }
+        };
+
+        var serverState = serverStates.FirstOrDefault(n => n.Node == number);
+        return serverState != null ? System.Text.Json.JsonSerializer.Serialize(serverState) : string.Empty;
+    }
 }
