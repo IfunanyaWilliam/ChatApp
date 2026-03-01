@@ -12,4 +12,6 @@ public interface IUserService
     bool SetUserOnline(string userId, string connectionId);
     bool SetUserOffline(string connectionId);
     User? GetUserByConnectionId(string connectionId);
+
+    string GetServerState();
 }
